@@ -1,7 +1,8 @@
 const Game = require('../models/game.model');
 const openaiService = require('../services/openai.service');
-const gameService = require('../services/game.service');
+// const gameService = require('../services/game.service'); // (unused in this version)
 
+// Save game and load game functions remain the same.
 exports.saveGame = async (req, res) => {
   const userId = req.user.id;
   const { state } = req.body;
@@ -36,11 +37,30 @@ exports.loadGame = async (req, res) => {
 };
 
 exports.generateContent = async (req, res) => {
+  const userId = req.user.id;
   const { prompt } = req.body;
+  
   try {
-    // Optionally, you can integrate more complex game logic here.
-    const content = await openaiService.generateAdventureContent(prompt);
-    res.json({ content });
+    // Load existing game state or create a new one with an empty narrative
+    let game = await Game.findOne({ user: userId });
+    if (!game) {
+      game = new Game({ user: userId, state: { narrative: "" } });
+    }
+    
+    // Build a dynamic prompt by including the existing game state and new user input
+    const dynamicPrompt = `Current Game State: ${game.state.narrative}
+User Input: ${prompt}
+Continue the adventure story coherently and creatively.`;
+    
+    // Generate new content using the OpenAI service
+    const content = await openaiService.generateAdventureContent(dynamicPrompt);
+    
+    // Update the persistent game state by appending the new content to the narrative
+    game.state.narrative += "\n" + content;
+    await game.save();
+    
+    // Return the generated content along with the updated state
+    res.json({ content, state: game.state });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Error generating content' });
