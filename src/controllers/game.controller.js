@@ -52,7 +52,7 @@ exports.generateContent = async (req, res) => {
 User Input: ${prompt}
 Continue the adventure story coherently and creatively.`;
     
-    // Generate new content using the OpenAI service
+    // Generate new content
     const content = await openaiService.generateAdventureContent(dynamicPrompt);
     
     // Update the persistent game state by appending the new content to the narrative

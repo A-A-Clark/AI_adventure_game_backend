@@ -11,7 +11,7 @@ exports.signup = async (req, res) => {
     }
     const user = new User({ username, email, password });
     await user.save();
-    const token = generateToken({ id: user._id, email: user.email });
+    const token = generateToken({ id: user._id, email: user.email, username: user.username });
     res.status(201).json({ token });
   } catch (err) {
     console.error(err);
@@ -30,7 +30,7 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
-    const token = generateToken({ id: user._id, email: user.email });
+    const token = generateToken({ id: user._id, email: user.email, username: user.username });
     res.json({ token });
   } catch (err) {
     console.error(err);
